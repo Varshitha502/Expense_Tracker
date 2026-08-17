@@ -4,31 +4,49 @@ Django settings for expense_tracker project.
 
 from pathlib import Path
 import os
+
 from dotenv import load_dotenv
+
+
+# ==================================================
+# BASE DIRECTORY
+# ==================================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env locally
+
+# ==================================================
+# ENVIRONMENT VARIABLES
+# ==================================================
+
+# Load .env when running locally
 load_dotenv(BASE_DIR / ".env")
 
 
-# --------------------------------------------------
+# ==================================================
 # SECURITY
-# --------------------------------------------------
+# ==================================================
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-local-development-key")
 
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv(
-    "ALLOWED_HOSTS",
-    "127.0.0.1,localhost"
-).split(",")
+
+# Render automatically provides RENDER_EXTERNAL_HOSTNAME
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+]
+
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
-# --------------------------------------------------
+# ==================================================
 # APPLICATIONS
-# --------------------------------------------------
+# ==================================================
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -42,9 +60,9 @@ INSTALLED_APPS = [
 ]
 
 
-# --------------------------------------------------
+# ==================================================
 # MIDDLEWARE
-# --------------------------------------------------
+# ==================================================
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -61,17 +79,23 @@ MIDDLEWARE = [
 ]
 
 
-# --------------------------------------------------
+# ==================================================
 # URL / TEMPLATES
-# --------------------------------------------------
+# ==================================================
 
 ROOT_URLCONF = "expense_tracker.urls"
+
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
+
+        "DIRS": [
+            BASE_DIR / "templates",
+        ],
+
         "APP_DIRS": True,
+
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
@@ -82,16 +106,19 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = "expense_tracker.wsgi.application"
 
 
-# --------------------------------------------------
+# ==================================================
 # DATABASE
-# --------------------------------------------------
+# ==================================================
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+
 if DATABASE_URL:
+
     import dj_database_url
 
     DATABASES = {
@@ -101,8 +128,10 @@ if DATABASE_URL:
             conn_health_checks=True,
         )
     }
+
 else:
-    # Local development
+
+    # Local development uses SQLite
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -111,9 +140,9 @@ else:
     }
 
 
-# --------------------------------------------------
+# ==================================================
 # PASSWORD VALIDATION
-# --------------------------------------------------
+# ==================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -143,9 +172,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# --------------------------------------------------
+# ==================================================
 # INTERNATIONALIZATION
-# --------------------------------------------------
+# ==================================================
 
 LANGUAGE_CODE = "en-us"
 
@@ -156,9 +185,9 @@ USE_I18N = True
 USE_TZ = True
 
 
-# --------------------------------------------------
+# ==================================================
 # STATIC FILES
-# --------------------------------------------------
+# ==================================================
 
 STATIC_URL = "/static/"
 
@@ -168,14 +197,16 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+
+# WhiteNoise
 STATICFILES_STORAGE = (
     "whitenoise.storage.CompressedManifestStaticFilesStorage"
 )
 
 
-# --------------------------------------------------
+# ==================================================
 # LOGIN / LOGOUT
-# --------------------------------------------------
+# ==================================================
 
 LOGIN_URL = "login"
 
@@ -184,12 +215,22 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "home"
 
 
-# --------------------------------------------------
+# ==================================================
 # CSRF
-# --------------------------------------------------
+# ==================================================
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
-    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    for origin in os.getenv(
+        "CSRF_TRUSTED_ORIGINS",
+        ""
+    ).split(",")
     if origin.strip()
 ]
+
+
+# ==================================================
+# DEFAULT PRIMARY KEY
+# ==================================================
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
