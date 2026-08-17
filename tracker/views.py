@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 from .forms import RegisterForm, TransactionForm
 from .models import Transaction
@@ -13,10 +14,19 @@ def home(request):
 def register(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
+
         if form.is_valid():
             user = form.save()
+
             login(request, user)
+
+            messages.success(
+                request,
+                "Registration completed successfully!"
+            )
+
             return redirect("dashboard")
+
     else:
         form = RegisterForm()
 
@@ -28,21 +38,39 @@ def user_login(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
 
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(
+            request,
+            username=username,
+            password=password
+        )
 
         if user is not None:
             login(request, user)
+
+            messages.success(
+                request,
+                f"Welcome {user.first_name or user.username}!"
+            )
+
             return redirect("dashboard")
+
         else:
-            return render(request, "login.html", {
-                "error": "Invalid Username or Password"
-            })
+            messages.error(
+                request,
+                "Invalid username or password."
+            )
 
     return render(request, "login.html")
 
 
 def user_logout(request):
     logout(request)
+
+    messages.info(
+        request,
+        "You have logged out successfully."
+    )
+
     return redirect("home")
 
 
@@ -51,11 +79,15 @@ def dashboard(request):
     transactions = Transaction.objects.filter(user=request.user)
 
     income = sum(
-        t.amount for t in transactions if t.transaction_type == "Income"
+        transaction.amount
+        for transaction in transactions
+        if transaction.transaction_type == "Income"
     )
 
     expense = sum(
-        t.amount for t in transactions if t.transaction_type == "Expense"
+        transaction.amount
+        for transaction in transactions
+        if transaction.transaction_type == "Expense"
     )
 
     balance = income - expense
@@ -79,13 +111,19 @@ def add_transaction(request):
             transaction = form.save(commit=False)
             transaction.user = request.user
             transaction.save()
+
+            messages.success(
+                request,
+                "Transaction added successfully."
+            )
+
             return redirect("dashboard")
 
     else:
         form = TransactionForm()
 
     return render(request, "add_transaction.html", {"form": form})
-from django.shortcuts import get_object_or_404
+
 
 @login_required
 def edit_transaction(request, id):
@@ -96,15 +134,33 @@ def edit_transaction(request, id):
     )
 
     if request.method == "POST":
-        form = TransactionForm(request.POST, instance=transaction)
+        form = TransactionForm(
+            request.POST,
+            instance=transaction
+        )
 
         if form.is_valid():
             form.save()
+
+            messages.success(
+                request,
+                "Transaction updated successfully."
+            )
+
             return redirect("dashboard")
+
     else:
         form = TransactionForm(instance=transaction)
 
-    return render(request, "add_transaction.html", {"form": form})
+    return render(
+        request,
+        "add_transaction.html",
+        {
+            "form": form
+        }
+    )
+
+
 @login_required
 def delete_transaction(request, id):
     transaction = get_object_or_404(
@@ -114,5 +170,8 @@ def delete_transaction(request, id):
     )
 
     transaction.delete()
-
+    messages.success(
+        request,
+        "Transaction deleted successfully."
+    )
     return redirect("dashboard")

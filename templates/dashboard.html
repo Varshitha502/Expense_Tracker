@@ -7,7 +7,7 @@
 <h1>Expense Dashboard</h1>
 
 <div class="cards">
-
+    
     <div class="card">
         <h2>💰 Balance</h2>
         <p>₹{{ balance }}</p>
@@ -47,10 +47,10 @@
         <td>{{ t.category }}</td>
         <td>{{ t.date }}</td>
         <td>
-            <a href="{% url 'edit_transaction' t.id %}">✏ Edit</a> |
+            <a href="{% url 'edit_transaction' t.id %}"> Edit</a> |
             <a href="{% url 'delete_transaction' t.id %}"
                onclick="return confirm('Delete transaction?')">
-               🗑 Delete
+               Delete
             </a>
         </td>
     </tr>
